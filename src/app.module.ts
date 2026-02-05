@@ -1,19 +1,30 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
-import { UsersModule } from '@/users/users.module';
+import { UsersModule } from '@/modules/users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
-import { AuthModule } from '@/auth/auth.module';
+import { AuthModule } from '@/modules/auth/auth.module';
 import databaseConfig from '@/config/database.config';
 import appConfig from '@/config/app.config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { TransformInterceptor } from '@/interceptor/transform.interceptor';
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from '@/exception/http-exception.filter';
 import { TokenModule } from './token/token.module';
 import { Throttle, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { CustomersModule } from './customers/customers.module';
+import { DriversModule } from './modules/drivers/drivers.module';
+import { MerchantsModule } from './modules/merchants/merchants.module';
+import { ProductsModule } from './modules/products/products.module';
+import { SystemCategoriesModule } from './modules/system-categories/system-categories.module';
+import { MerchantCategoriesModule } from './modules/merchant-categories/merchant-categories.module';
+import { OptionGroupsModule } from './modules/option-groups/option-groups.module';
+import { OptionsModule } from './modules/options/options.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { DeliveriesModule } from './modules/deliveries/deliveries.module';
+import { ChatModule } from './modules/chat/chat.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -35,6 +46,10 @@ import { Throttle, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
         // DEV ONLY: Tự động tạo bảng theo code (tắt khi lên Production)
         synchronize: true,
         namingStrategy: new SnakeNamingStrategy(),
+        url: config.url,
+        ssl: {
+          rejectUnauthorized: false,
+        },
       }),
     }),
     ThrottlerModule.forRoot([
@@ -46,6 +61,17 @@ import { Throttle, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
     UsersModule,
     AuthModule,
     TokenModule,
+    CustomersModule,
+    DriversModule,
+    MerchantsModule,
+    ProductsModule,
+    SystemCategoriesModule,
+    MerchantCategoriesModule,
+    OptionGroupsModule,
+    OptionsModule,
+    OrdersModule,
+    DeliveriesModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [

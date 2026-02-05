@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 
 export type AccessTokenPayload = {
   sub: number;
-  userName: string;
+  email: string;
 };
 
 export type RefreshTokenPayload = {
