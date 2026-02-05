@@ -14,7 +14,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from '@/exception/http-exception.filter';
 import { TokenModule } from './token/token.module';
 import { Throttle, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { CustomersModule } from './customers/customers.module';
+import { CustomersModule } from './modules/customers/customers.module';
 import { DriversModule } from './modules/drivers/drivers.module';
 import { MerchantsModule } from './modules/merchants/merchants.module';
 import { ProductsModule } from './modules/products/products.module';
@@ -44,7 +44,7 @@ import { ChatModule } from './modules/chat/chat.module';
         // Tự động load các file entity (user.entity.ts,...) vào TypeORM
         autoLoadEntities: true,
         // DEV ONLY: Tự động tạo bảng theo code (tắt khi lên Production)
-        synchronize: true,
+        synchronize: false,
         namingStrategy: new SnakeNamingStrategy(),
         url: config.url,
         ssl: {

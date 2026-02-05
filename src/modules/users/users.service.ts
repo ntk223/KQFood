@@ -33,6 +33,11 @@ export class UsersService {
     return user;
   }
 
+  async checkExistByEmail(email : string) : Promise<boolean>  {
+    const count = await this.usersRepository.countBy({ email });
+    return count > 0;
+  }
+
   async findById(id : number) : Promise<User>  {
     const user = await this.usersRepository.findOneBy({ id });
     if (!user) {
