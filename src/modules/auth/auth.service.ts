@@ -11,9 +11,9 @@ export class AuthService {
     private readonly tokenService: TokenService,
   ) {}
 
-  async getTokens(sub: number, email: string) {
+  async getTokens(sub: number, email: string, roles: any[]) {
     const [accessToken, refreshToken] = await Promise.all([
-      this.tokenService.signAccessToken({ sub, email }),
+      this.tokenService.signAccessToken({ sub, email, roles }),
       this.tokenService.signRefreshToken({ sub }),
     ]);
     
@@ -40,7 +40,7 @@ export class AuthService {
   }
   async login(user: any) {
 
-      const {accessToken, refreshToken} = await this.getTokens(user.id, user.email);      
+      const {accessToken, refreshToken} = await this.getTokens(user.id, user.email, user.roles);      
       await this.updateRtHashed(user.id, refreshToken);
       return {
         access_token: accessToken, // Tạo chuỗi token mã hóa
@@ -72,7 +72,7 @@ export class AuthService {
       const { accessToken, refreshToken } = await this.getTokens(
         user.id,
         user.email,
-        // user.roles.join(','),        
+        user.roles,        
       );
       await this.updateRtHashed(user.id, refreshToken);
       return {

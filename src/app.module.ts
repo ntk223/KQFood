@@ -11,6 +11,7 @@ import appConfig from '@/config/app.config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { TransformInterceptor } from '@/interceptor/transform.interceptor';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { HttpExceptionFilter } from '@/exception/http-exception.filter';
 import { TokenModule } from './token/token.module';
 import { Throttle, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -83,6 +84,10 @@ import { ChatModule } from './modules/chat/chat.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard  
     },
     {
       provide: APP_GUARD,
