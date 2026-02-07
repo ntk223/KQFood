@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { hashPassword } from '../../utils/password.helper';
+import { hashPassword, comparePassword } from '../../utils/password.helper';
+import { RoleType } from '@/constants/role';
+import { createProfile } from '@/utils/createProfile.helper';
 @Injectable()
 export class UsersService {
   constructor(
@@ -71,5 +73,24 @@ export class UsersService {
     return {
       deletedId: id,
     }
+  }
+
+  async addRoleToUser(userId: number, role: RoleType, password: string, manager: EntityManager) : Promise<User> {
+      const userRepo = manager.getRepository(User);
+      const user = await userRepo.findOne({ where: { id: userId } });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      const passwordMatches = await comparePassword(password, user.password);
+      if (!passwordMatches) {
+        throw new UnauthorizedException('Incorrect password');
+      }
+      if (user.roles.includes(role)) {
+        throw new ConflictException(`User already has role ${role}`);
+      }
+      user.roles.push(role);
+      const updatedUser = await userRepo.save(user);
+      await createProfile(manager, role, user.id);
+      return updatedUser;
   }
 }

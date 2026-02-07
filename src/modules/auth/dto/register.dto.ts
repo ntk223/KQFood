@@ -18,5 +18,5 @@ export class RegisterDto {
   avatar: string;
 
   @IsNotEmpty()
-  roles: RoleType[];
+  role: RoleType;
 }
