@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-
+import { RoleType } from '@/constants/role';
 export type AccessTokenPayload = {
   sub: number;
-  email: string;
+  roles: RoleType[];
 };
 
 export type RefreshTokenPayload = {
