@@ -8,6 +8,8 @@ import {
   Delete,
   Put,
   Res,
+  Request,
+  HttpCode,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -35,10 +37,10 @@ export class UsersController {
     return this.usersService.findById(+id); 
   }
 
-  @Put(':id')
+  @Put()
   @ResponseMessage('User updated successfully')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) :Promise<User>  {
-    return this.usersService.update(+id, updateUserDto);
+  update(@Request() req, @Body() updateUserDto: UpdateUserDto) :Promise<User> {
+    return this.usersService.update(+req.user.sub, updateUserDto);
   }
 
   @Delete(':id')
