@@ -9,10 +9,11 @@ import { RoleType } from '@/constants/role';
 export class SystemCategoriesController {
   constructor(private readonly systemCategoriesService: SystemCategoriesService) {}
 
+
   @Post()
   @Roles(RoleType.ADMIN) 
-  create(@Body() createSystemCategoryDto: CreateSystemCategoryDto) {
-    return this.systemCategoriesService.create(createSystemCategoryDto);
+  create(@Body() createSystemCategoryDtos: CreateSystemCategoryDto[]) {
+    return this.systemCategoriesService.create(createSystemCategoryDtos);
   }
 
   @Get()
@@ -28,13 +29,13 @@ export class SystemCategoriesController {
   }
 
   @Patch(':id')
-  @Roles(RoleType.ADMIN) // ✅ Chỉ Admin mới cập nhật
+  @Roles(RoleType.ADMIN)
   update(@Param('id') id: string, @Body() updateSystemCategoryDto: UpdateSystemCategoryDto) {
     return this.systemCategoriesService.update(+id, updateSystemCategoryDto);
   }
 
   @Delete(':id')
-  @Roles(RoleType.ADMIN) // ✅ Chỉ Admin mới xóa
+  @Roles(RoleType.ADMIN)
   remove(@Param('id') id: string) {
     return this.systemCategoriesService.remove(+id);
   }

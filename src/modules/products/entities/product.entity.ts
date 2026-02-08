@@ -71,7 +71,7 @@ export class Product extends BaseEntity {
     merchant: Merchant;
 
     @ManyToOne(() => MerchantCategory, (merchantCategories) => merchantCategories.products)
-    @JoinColumn({ name: "merchant_category_id" })
+    @JoinColumn({ name: "category_id" })
     merchantCategory: MerchantCategory;
 
     @OneToMany(() => OrderItem, (orderItem) => orderItem.product)

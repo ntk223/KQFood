@@ -2,12 +2,15 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { MerchantCategoriesService } from './merchant-categories.service';
 import { CreateMerchantCategoryDto } from './dto/create-merchant-category.dto';
 import { UpdateMerchantCategoryDto } from './dto/update-merchant-category.dto';
+import { Roles } from '@/decorator/customize';
+import { RoleType } from '@/constants/role';
 
 @Controller('merchant-categories')
 export class MerchantCategoriesController {
   constructor(private readonly merchantCategoriesService: MerchantCategoriesService) {}
 
   @Post()
+  @Roles(RoleType.MERCHANT)
   create(@Body() createMerchantCategoryDto: CreateMerchantCategoryDto) {
     return this.merchantCategoriesService.create(createMerchantCategoryDto);
   }
