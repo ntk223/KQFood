@@ -2,6 +2,8 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { OptionsService } from './options.service';
 import { CreateOptionDto } from './dto/create-option.dto';
 import { UpdateOptionDto } from './dto/update-option.dto';
+import { Roles } from '@/decorator/customize';
+import { RoleType } from '@/constants/role';
 
 @Controller('options')
 export class OptionsController {
@@ -15,6 +17,12 @@ export class OptionsController {
   @Get()
   findAll() {
     return this.optionsService.findAll();
+  }
+
+  @Get('group/:groupId')
+  @Roles(RoleType.MERCHANT)
+  findByGroup(@Param('groupId') groupId: string) {
+    return this.optionsService.findByGroup(+groupId);
   }
 
   @Get(':id')

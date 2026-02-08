@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { User } from './../users/entities/user.entity';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Repository } from 'typeorm';
@@ -7,7 +8,9 @@ import { InjectRepository } from '@nestjs/typeorm/dist/common/typeorm.decorators
 import { SystemCategory } from '../system-categories/entities/system-category.entity';
 import { Merchant } from '../merchants/entities/merchant.entity';
 import { MerchantCategory } from '../merchant-categories/entities/merchant-category.entity';
+import { OptionGroup } from '../option-groups/entities/option-group.entity';
 import { matchesKeywords } from '@/utils/autoTagging.helper';
+import { log } from 'console';
 
 @Injectable()
 export class ProductsService {
@@ -16,15 +19,31 @@ export class ProductsService {
     private product: Repository<Product>,
     @InjectRepository(SystemCategory)
     private systemCategory: Repository<SystemCategory>,
-    // @InjectRepository(Merchant)
-    // private merchant: Repository<Merchant>,
-    // @InjectRepository(MerchantCategory)
-    // private merchantCategory: Repository<MerchantCategory>,
+    @InjectRepository(OptionGroup)
+    private optionGroup: Repository<OptionGroup>,
+    @InjectRepository(User)
+    private user: Repository<User>,
   ){}
   
-  async create(createProductDto: CreateProductDto) {
-    // Tạo product entity
-    const newProduct = this.product.create(createProductDto);
+  async create(createProductDto: CreateProductDto, req: any) {
+    const userId = req.user.sub;
+    
+    const userWithMerchant = await this.user.findOne({
+      where: { id: userId },
+      relations: ['merchant']
+    });
+    
+    if (!userWithMerchant || !userWithMerchant.merchant) {
+      log(userWithMerchant);
+      throw new BadRequestException('User không có merchant profile');
+    }
+    
+    const merchantId = userWithMerchant.merchant.id;
+    
+    const newProduct = this.product.create({
+      ...createProductDto,
+      merchantId
+    });
     
     // Bước 1: Save product trước (không có relations)
     const savedProduct = await this.product.save(newProduct);
@@ -50,20 +69,35 @@ export class ProductsService {
       savedProduct.systemCategories = detectedCategories;
       await this.product.save(savedProduct);
     }
+
+    // Bước 4: Xử lý OptionGroups nếu có
+    if (createProductDto.optionGroupIds && createProductDto.optionGroupIds.length > 0) {
+      const optionGroups = await this.optionGroup.findByIds(createProductDto.optionGroupIds);
+      if (optionGroups.length > 0) {
+        savedProduct.optionGroups = optionGroups;
+        await this.product.save(savedProduct);
+      }
+    }
     
     // Trả về product với relations
     return this.product.findOne({
       where: { id: savedProduct.id },
-      relations: ['systemCategories']
+      relations: ['systemCategories', 'optionGroups', 'optionGroups.options']
     });
   }
 
   findAll() {
-    return `This action returns all products`;
+    return this.product.find({
+      relations: ['systemCategories', 'optionGroups', 'optionGroups.options', 'merchantCategory'],
+      order: { createdAt: 'DESC' }
+    });
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} product`;
+    return this.product.findOne({
+      where: { id },
+      relations: ['systemCategories', 'optionGroups', 'optionGroups.options', 'merchantCategory', 'merchant']
+    });
   }
 
   update(id: number, updateProductDto: UpdateProductDto) {

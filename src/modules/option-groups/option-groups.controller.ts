@@ -1,20 +1,29 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Roles } from './../../decorator/customize';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request } from '@nestjs/common';
 import { OptionGroupsService } from './option-groups.service';
 import { CreateOptionGroupDto } from './dto/create-option-group.dto';
 import { UpdateOptionGroupDto } from './dto/update-option-group.dto';
+import { RoleType } from '@/constants/role';
 
 @Controller('option-groups')
 export class OptionGroupsController {
   constructor(private readonly optionGroupsService: OptionGroupsService) {}
 
   @Post()
-  create(@Body() createOptionGroupDto: CreateOptionGroupDto) {
-    return this.optionGroupsService.create(createOptionGroupDto);
+  @Roles(RoleType.MERCHANT)
+  create(@Body() createOptionGroupDto: CreateOptionGroupDto, @Request() req: any) {
+    return this.optionGroupsService.create(createOptionGroupDto, req);
   }
 
   @Get()
   findAll() {
     return this.optionGroupsService.findAll();
+  }
+
+  @Get('merchant/:merchantId')
+  @Roles(RoleType.MERCHANT)
+  findByMerchant(@Param('merchantId') merchantId: string) {
+    return this.optionGroupsService.findByMerchant(+merchantId);
   }
 
   @Get(':id')

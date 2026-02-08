@@ -1,8 +1,5 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsArray } from 'class-validator';
 export class CreateProductDto {
-    @IsNotEmpty()
-    merchantId: number
-
     @IsNotEmpty()
     categoryId: number
 
@@ -20,4 +17,8 @@ export class CreateProductDto {
     
     @IsNotEmpty()
     name: string;
+
+    @IsOptional()
+    @IsArray()
+    optionGroupIds?: number[];
 }
