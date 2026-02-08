@@ -11,11 +11,9 @@ export class SystemCategoriesService {
     @InjectRepository(SystemCategory)
     private systemCategory: Repository<SystemCategory>,
   ){}
-
-
-
-  create(createSystemCategoryDto: CreateSystemCategoryDto) {
-    
+  create(createSystemCategoryDtos: CreateSystemCategoryDto[]) {
+    const newCategories = this.systemCategory.create(createSystemCategoryDtos);
+    return this.systemCategory.save(newCategories);
   }
 
   findAll() {
