@@ -26,6 +26,7 @@ import { OptionsModule } from './modules/options/options.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { DeliveriesModule } from './modules/deliveries/deliveries.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -73,6 +74,7 @@ import { ChatModule } from './modules/chat/chat.module';
     OrdersModule,
     DeliveriesModule,
     ChatModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [
