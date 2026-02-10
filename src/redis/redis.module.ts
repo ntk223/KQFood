@@ -1,6 +1,7 @@
 import { Module, Global, OnModuleInit, Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+import { RedisService } from './redis.service';
 
 @Global()
 @Module({
@@ -20,8 +21,9 @@ import Redis from 'ioredis';
       },
       inject: [ConfigService],
     },
+    RedisService,
   ],
-  exports: ['REDIS_CLIENT'],
+  exports: ['REDIS_CLIENT', RedisService],
 })
 export class RedisModule implements OnModuleInit {
   private readonly logger = new Logger('RedisModule'); // Tạo logger với context là RedisModule
