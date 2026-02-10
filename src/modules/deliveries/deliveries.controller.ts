@@ -1,34 +1,42 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request } from '@nestjs/common';
 import { DeliveriesService } from './deliveries.service';
 import { CreateDeliveryDto } from './dto/create-delivery.dto';
 import { UpdateDeliveryDto } from './dto/update-delivery.dto';
+import { DeliveryStatus } from '@/constants/deliveryStatus';
+import { RoleType } from '@/constants/role';
+import { Roles } from '@/decorator/customize';
 
 @Controller('deliveries')
 export class DeliveriesController {
   constructor(private readonly deliveriesService: DeliveriesService) {}
 
-  @Post()
-  create(@Body() createDeliveryDto: CreateDeliveryDto) {
-    return this.deliveriesService.create(createDeliveryDto);
+  @Post('/:id/arrive')
+  @Roles(RoleType.DRIVER)
+  arriveMerchant(@Param('id') id: string) {
+    return this.deliveriesService.updateDeliveryStatus(+id, DeliveryStatus.ARRIVED_MERCHANT);
   }
 
-  @Get()
-  findAll() {
-    return this.deliveriesService.findAll();
+  @Post('/:id/pickup')
+  @Roles(RoleType.DRIVER)
+  pickup(@Param('id') id: string) {
+    return this.deliveriesService.updateDeliveryStatus(+id, DeliveryStatus.PICKED_UP);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.deliveriesService.findOne(+id);
+  @Post('/:id/delivering')
+  @Roles(RoleType.DRIVER)
+  deliver(@Param('id') id: string) {
+    return this.deliveriesService.updateDeliveryStatus(+id, DeliveryStatus.DELIVERING);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDeliveryDto: UpdateDeliveryDto) {
-    return this.deliveriesService.update(+id, updateDeliveryDto);
+  @Post('/:id/assign-driver')
+  @Roles(RoleType.ADMIN, RoleType.DRIVER)
+  assignDriver(@Param('id') id: string, @Request() req) {
+    return this.deliveriesService.assignDriver(+id, req.user.sub);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.deliveriesService.remove(+id);
+  @Post('/:id/complete')
+  @Roles(RoleType.DRIVER)
+  complete(@Param('id') id: string) {
+    return this.deliveriesService.completeDelivery(+id);
   }
 }

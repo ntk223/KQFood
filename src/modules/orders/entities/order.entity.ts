@@ -48,6 +48,18 @@ export class Order extends BaseEntity{
     })
     deliveryLocation: GeoPoint;
 
+    @Column({ nullable: false, type: 'varchar' })
+    pickupAddress: string;
+
+    @Index({ spatial: true })
+    @Column({
+        type: 'geography',
+        spatialFeatureType: 'Point',
+        srid: 4326,
+        nullable: true,
+    })
+    pickupLocation: GeoPoint;
+    
     @Column({ nullable: true, type: 'timestamp' })
     @Transform(({ value }) => {
     if (!value) {
