@@ -1,5 +1,6 @@
 import { BaseEntity } from "@/base/base.entity";
 import { OptionGroup } from "@/modules/option-groups/entities/option-group.entity";
+import { ColumnNumericTransformer } from "@/utils/transformNumeric.helper";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 @Entity('options')
 export class Option extends BaseEntity {
@@ -11,7 +12,7 @@ export class Option extends BaseEntity {
     @Column({ nullable: false, type: 'varchar' })
     name: string;
 
-    @Column({default: 0, type: 'numeric'})
+    @Column({default: 0, type: 'numeric', transformer: new ColumnNumericTransformer()})
     priceAdjustment: number;
 
     @Column({ default: true })

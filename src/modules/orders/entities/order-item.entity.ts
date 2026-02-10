@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGene
 import { Order } from "./order.entity";
 import { Product } from "@/modules/products/entities/product.entity";
 import { OrderItemOption } from "./order-item-option.entity";
+import { ColumnNumericTransformer } from "@/utils/transformNumeric.helper";
 
 @Entity("order_items")
 export class OrderItem {
@@ -24,7 +25,7 @@ export class OrderItem {
     quantity: number;
     // @Expose()
 
-    @Column({ nullable: false, type: 'numeric' })
+    @Column({ nullable: false, type: 'numeric', transformer: new ColumnNumericTransformer() })
     totalLinePrice: number;
 
     @OneToMany(() => Order, (order) => order.orderItems)
@@ -35,6 +36,6 @@ export class OrderItem {
     @JoinColumn({ name: 'product_id' })
     product: Product;
 
-    @OneToMany(() => OrderItemOption, (orderItemOption) => orderItemOption.orderItem)
+    @OneToMany(() => OrderItemOption, (orderItemOption) => orderItemOption.orderItem, { cascade: true })
     orderItemOptions: OrderItemOption[];
 }

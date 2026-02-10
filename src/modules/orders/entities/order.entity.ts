@@ -9,6 +9,7 @@ import { formatTime } from "@/utils/formatTime.helper";
 import { Transform, Expose } from "class-transformer";
 import { OrderItem } from "./order-item.entity";
 import { Delivery } from "@/modules/deliveries/entities/delivery.entity";
+import { ColumnNumericTransformer } from "@/utils/transformNumeric.helper";
 @Entity("orders")
 export class Order extends BaseEntity{
     @Column({ nullable: false, type: 'int' })
@@ -20,22 +21,22 @@ export class Order extends BaseEntity{
     @Column({ nullable: false, type: 'enum', enum: OrderStatus.PENDING })
     status: OrderStatus;
 
-    @Column({ nullable: false, type: 'numeric' })
+    @Column({ nullable: false, type: 'numeric' , transformer: new ColumnNumericTransformer()})
     totalProductPrice: number;
 
-    @Column({ nullable: false, type: 'numeric' })
+    @Column({ nullable: false, type: 'numeric', transformer: new ColumnNumericTransformer() })
     shippingFee: number;
 
-    @Column({ nullable: true, type: 'numeric' })
+    @Column({ nullable: true, type: 'numeric', default: 0, transformer: new ColumnNumericTransformer() })
     discountAmount: number;
 
-    @Column({ nullable: false, type: 'numeric' })
+    @Column({ nullable: false, type: 'numeric', transformer: new ColumnNumericTransformer() })
     finalAmount: number;
 
     @Column({ nullable: false, type: 'enum', enum: PaymentMethod, default: PaymentMethod.CASH })
     paymentMethod: PaymentMethod;
 
-    @Column({ nullable: true })
+    @Column({ nullable: false, type: 'varchar' })
     deliveryAddress: string;
 
     @Index({ spatial: true }) // 👈 BẮT BUỘC: Tạo Index để tìm kiếm nhanh
@@ -82,7 +83,7 @@ export class Order extends BaseEntity{
     @JoinColumn({ name: "merchant_id" })
     merchant: Merchant;
 
-    @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
+    @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
     orderItems: OrderItem[];
 
     @OneToOne(() => Delivery, (delivery) => delivery.order)

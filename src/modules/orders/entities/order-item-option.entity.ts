@@ -1,5 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { OrderItem } from "./order-item.entity";
+import { ColumnNumericTransformer } from "@/utils/transformNumeric.helper";
 
 @Entity("order_item_options")
 export class OrderItemOption {
@@ -15,7 +16,7 @@ export class OrderItemOption {
     @Column({ nullable: false, type: 'varchar' })
     optionNameSnapshot: string;
 
-    @Column({ nullable: false, type: 'numeric' })
+    @Column({ nullable: false, type: 'numeric', transformer: new ColumnNumericTransformer() })
     priceAdjustmentSnapshot: number;
     
     @ManyToOne(() => OrderItem, (orderItem) => orderItem.orderItemOptions)
