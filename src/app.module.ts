@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule, ValidationPipe } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  ValidationPipe,
+} from '@nestjs/common';
 import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
 import { UsersModule } from '@/modules/users/users.module';
@@ -28,12 +33,14 @@ import { DeliveriesModule } from './modules/deliveries/deliveries.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { LoggerMiddleware } from './middlewares/logger.middleware';
+import { RedisModule } from './redis/redis.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, appConfig],
     }),
+    RedisModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [databaseConfig.KEY], // Inject namespace 'database'
@@ -59,7 +66,7 @@ import { LoggerMiddleware } from './middlewares/logger.middleware';
       {
         ttl: 60000,
         limit: 10,
-      }
+      },
     ]),
     UsersModule,
     AuthModule,
@@ -86,31 +93,28 @@ import { LoggerMiddleware } from './middlewares/logger.middleware';
     },
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard
+      useClass: JwtAuthGuard,
     },
     {
       provide: APP_GUARD,
-      useClass: RolesGuard  
+      useClass: RolesGuard,
     },
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard
-    }
-    ,
+      useClass: ThrottlerGuard,
+    },
     // {
     //   provide: APP_PIPE,
     //   useClass: ValidationPipe,
     // }
     {
       provide: APP_FILTER,
-      useClass: HttpExceptionFilter
-    }
+      useClass: HttpExceptionFilter,
+    },
   ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-    .apply(LoggerMiddleware)
-    .forRoutes('*');
+    consumer.apply(LoggerMiddleware).forRoutes('*');
   }
 }
