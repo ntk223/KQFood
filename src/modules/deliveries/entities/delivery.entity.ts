@@ -26,7 +26,7 @@ export class Delivery extends BaseEntity{
         srid: 4326, // Chuẩn GPS quốc tế
         nullable: true,
     })
-    dropOffLocation: GeoPoint;
+    dropoffLocation: GeoPoint;
 
     @Column({
         type: 'geography',
@@ -34,7 +34,7 @@ export class Delivery extends BaseEntity{
         srid: 4326, // Chuẩn GPS quốc tế
         nullable: true,
     })
-    pickUpLocation: GeoPoint;
+    pickupLocation: GeoPoint;
 
     @Column({ nullable: true, type: 'timestamp' })
     @Transform(({ value }) => {
@@ -70,7 +70,7 @@ export class Delivery extends BaseEntity{
         }
         return formatTime(value);
         })
-    canceledAt: Date
+    cancelledAt: Date
 
     @OneToOne(() => Order, (order) => order.delivery)
     @JoinColumn({ name: "order_id" })

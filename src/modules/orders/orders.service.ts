@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { OrderItemOption } from './entities/order-item-option.entity';
@@ -12,6 +12,9 @@ import { Merchant } from '../merchants/entities/merchant.entity';
 import { Option } from '../options/entities/option.entity';
 import { GeoPoint } from '@/interfaces/geopoint.interface';
 import { Customer } from '../customers/entities/customer.entity';
+import { canTransitionOrderStatus, OrderStatus } from '@/constants/orderStatus';
+import { DeliveryStatus, canTransitionDeliveryStatus } from '@/constants/deliveryStatus';
+import { Delivery } from '../deliveries/entities/delivery.entity';
 @Injectable()
 export class OrdersService {
   constructor(
@@ -61,6 +64,8 @@ export class OrdersService {
       const order = new Order();
       order.customerId = customer.id;
       order.merchantId = dto.merchantId;
+      order.pickupAddress = merchant.address;
+      order.pickupLocation = fromLocation;
       order.paymentMethod = dto.paymentMethod;
       order.deliveryAddress = dto.deliveryAddress;
       if (dto.deliveryLat && dto.deliveryLong) {
@@ -111,6 +116,50 @@ export class OrdersService {
     })
   }
 
+  async updateStatus(orderId: number, newStatus: OrderStatus, manager: EntityManager) {
+    const orderRepo = manager.getRepository(Order);
+    const order = await orderRepo.findOneBy({ id: orderId });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    if (!canTransitionOrderStatus(order.status, newStatus)) {
+      throw new BadRequestException(`Cannot transition from ${order.status} to ${newStatus}`);
+    }
+    order.status = newStatus;
+    return await orderRepo.save(order);
+  }
+
+  async confirmOrder(orderId: number) {
+    return this.dataSource.transaction(async (manager) => {
+      const updatedOrder = await this.updateStatus(orderId, OrderStatus.CONFIRMED, manager);
+      const newDelivery = new Delivery()
+      newDelivery.orderId = orderId;
+      newDelivery.driverFee = updatedOrder.shippingFee * 0.8; // 0.8 test
+      newDelivery.pickupLocation = updatedOrder.pickupLocation
+      newDelivery.dropoffLocation = updatedOrder.deliveryLocation
+      updatedOrder.confirmedAt = new Date();
+      await manager.save(updatedOrder);
+      await manager.save(newDelivery);
+      return updatedOrder;
+    })
+  }
+
+  async cancelOrder(orderId: number) {
+    return this.dataSource.transaction(async (manager) => {
+      const updatedOrder = await this.updateStatus(orderId, OrderStatus.CANCELLED, manager);
+      const deliveryRepo = manager.getRepository(Delivery);
+      const delivery = await deliveryRepo.findOneBy({ orderId });
+      if (!delivery) return updatedOrder;
+      if (!canTransitionDeliveryStatus(delivery.status, DeliveryStatus.CANCELLED)) {
+        throw new BadRequestException(`Cannot cancel delivery with status ${delivery?.status}`);
+      }
+      delivery.status = DeliveryStatus.CANCELLED;
+      delivery.cancelledAt = new Date();
+      await deliveryRepo.save(delivery);
+      return updatedOrder;
+    })
+  }
+  
   findAll() {
     return `This action returns all orders`;
   }
