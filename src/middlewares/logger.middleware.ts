@@ -15,7 +15,8 @@ export class LoggerMiddleware implements NestMiddleware {
 
     // Lắng nghe sự kiện khi response kết thúc
     res.on('finish', () => {
-      const { statusCode } = res;
+      const statusCode = res.statusCode || 500;
+      const message = res.statusMessage;
       // Lấy độ dài content (nếu có)
       const contentLength = res.get('content-length');
       
@@ -25,7 +26,7 @@ export class LoggerMiddleware implements NestMiddleware {
       // Log ra console
       // Format: [METHOD] [URL] [STATUS] [SIZE] - [AGENT] [IP] [DURATION]
       this.logger.log(
-        `${method} ${originalUrl} ${statusCode} ${contentLength} - ${userAgent} ${ip} +${duration}ms`,
+        `${method} ${originalUrl} ${statusCode} ${message} +${duration}ms`,
       );
     });
 

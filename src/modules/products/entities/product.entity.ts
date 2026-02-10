@@ -4,6 +4,7 @@ import { Merchant } from "@/modules/merchants/entities/merchant.entity";
 import { OptionGroup } from "@/modules/option-groups/entities/option-group.entity";
 import { OrderItem } from "@/modules/orders/entities/order-item.entity";
 import { SystemCategory } from "@/modules/system-categories/entities/system-category.entity";
+import { ColumnNumericTransformer } from "@/utils/transformNumeric.helper";
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from "typeorm";
 
 @Entity("products")
@@ -20,7 +21,7 @@ export class Product extends BaseEntity {
     @Column({ nullable: true, type: 'text' })
     description: string;
 
-    @Column({ nullable: false, type: 'numeric' })
+    @Column({ nullable: false, type: 'numeric', transformer: new ColumnNumericTransformer() })
     basePrice: number;
 
     @Column({ nullable: true, type: 'varchar' })
