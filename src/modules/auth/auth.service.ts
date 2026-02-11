@@ -7,12 +7,15 @@ import { DataSource } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { createProfile } from '@/utils/createProfile.helper';
 import { RoleType } from '@/constants/role';
+import { RedisService } from '@/redis/redis.service';
+
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UsersService,
     private readonly tokenService: TokenService,
     private readonly dataSource: DataSource,
+    private readonly redisService: RedisService,
   ) {}
 
   async getTokens(sub: number, roles: RoleType[]) {
@@ -28,7 +31,7 @@ export class AuthService {
   }
 
   async validateUser(email: string, pass: string): Promise<any> {
-    const foundUser = await this.userService.findOneByEmail(email); // Tìm user trong DB
+    const foundUser = await this.userService.findOneByEmail(email);
     
     if (!foundUser) {
         return null;
@@ -42,12 +45,14 @@ export class AuthService {
     const { password, ...result } = foundUser;
     return result;
   }
-  async login(user: any) {
 
+  async login(user: any) {
       const {accessToken, refreshToken} = await this.getTokens(user.id, user.roles);      
-      await this.updateRtHashed(user.id, refreshToken);
+      // Lưu refresh token vào Redis
+      await this.redisService.setRefreshToken(user.id, refreshToken);
+      
       return {
-        access_token: accessToken, // Tạo chuỗi token mã hóa
+        access_token: accessToken,
         refresh_token: refreshToken,
         user: {
             id: user.id,
@@ -58,27 +63,34 @@ export class AuthService {
       };
     }
 
-    async updateRtHashed(userId: number, rt: string) {
-      const hash = await hashPassword(rt);
-      await this.userService.updateRtHashed(userId, hash);
-    }
-
     async refreshTokens(userId: number, rt: string) {
       const user = await this.userService.findById(userId);
       
-      if (!user || !user.refreshTokenHash) {
-        throw new UnauthorizedException('Access Denied 1');
+      if (!user) {
+        throw new UnauthorizedException('User not found');
       }
-      const rtMatches = await comparePassword(rt, user.refreshTokenHash);
-      if (!rtMatches) {
-        throw new UnauthorizedException('Access Denied');
+
+      // Lấy refresh token từ Redis
+      const storedToken = await this.redisService.getRefreshToken(userId);
+      
+      if (!storedToken) {
+        throw new UnauthorizedException('Refresh token not found');
       }
+
+      // So sánh token
+      if (rt !== storedToken) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Tạo token mới
       const { accessToken, refreshToken } = await this.getTokens(
         user.id,
         user.roles,
-        // user.roles.join(','),        
       );
-      await this.updateRtHashed(user.id, refreshToken);
+
+      // Lưu refresh token mới vào Redis
+      await this.redisService.setRefreshToken(user.id, refreshToken);
+      
       return {
         access_token: accessToken,
         refresh_token: refreshToken,
@@ -86,7 +98,8 @@ export class AuthService {
     }
 
     async logout(userId: number) : Promise<void> {
-      return this.userService.updateRtHashed(userId, null);
+      // Xóa refresh token từ Redis
+      await this.redisService.deleteRefreshToken(userId);
     }
 
     async register(dto : RegisterDto) : Promise<any> {
