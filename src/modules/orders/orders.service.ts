@@ -6,7 +6,6 @@ import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { OrderItemOption } from './entities/order-item-option.entity';
-import { calculateDeliveryFee } from '@/utils/caculateDeliveryFee.helper';
 import { Product } from '../products/entities/product.entity';
 import { Merchant } from '../merchants/entities/merchant.entity';
 import { Option } from '../options/entities/option.entity';
@@ -15,6 +14,7 @@ import { Customer } from '../customers/entities/customer.entity';
 import { canTransitionOrderStatus, OrderStatus } from '@/constants/orderStatus';
 import { DeliveryStatus, canTransitionDeliveryStatus } from '@/constants/deliveryStatus';
 import { Delivery } from '../deliveries/entities/delivery.entity';
+import { LocationService } from '../location/location.service';
 @Injectable()
 export class OrdersService {
   constructor(
@@ -25,7 +25,8 @@ export class OrdersService {
     @InjectRepository(OrderItemOption)
     private readonly orderItemOptionRepository: Repository<OrderItemOption>,
 
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    private readonly locationService: LocationService,
   ) {}
 
   async create(dto: CreateOrderDto, userId: number) : Promise<Order> {
@@ -75,7 +76,13 @@ export class OrdersService {
         };
         order.deliveryLocation = deliveryLocation;
       }
-      const shippingFee = calculateDeliveryFee(fromLocation, order.deliveryLocation);
+      const routing = await this.locationService.getRouting(
+        merchant.location.coordinates[1], 
+        merchant.location.coordinates[0],
+        order.deliveryLocation.coordinates[1],
+        order.deliveryLocation.coordinates[0]
+      );
+      const shippingFee = routing.shippingFee;
       order.shippingFee = shippingFee;
       order.orderItems = [];
       let totalProductPrice = 0;
@@ -111,7 +118,11 @@ export class OrdersService {
       order.finalAmount = totalProductPrice + shippingFee;
 
       await manager.save(order);
-      return order;
+      return {...order, 
+        distance: `${routing.distanceMeters / 1000} km`, 
+        duration: `${Math.ceil(routing.timeSeconds / 60)} phút`,
+        // shippingFee: `${routing.shippingFee.toLocaleString('vi-VN')} VNĐ` 
+      };
 
     })
   }

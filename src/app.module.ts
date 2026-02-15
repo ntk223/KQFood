@@ -34,6 +34,7 @@ import { ChatModule } from './modules/chat/chat.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { LoggerMiddleware } from './middlewares/logger.middleware';
 import { RedisModule } from './redis/redis.module';
+import { LocationModule } from './modules/location/location.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -83,6 +84,7 @@ import { RedisModule } from './redis/redis.module';
     DeliveriesModule,
     ChatModule,
     CloudinaryModule,
+    LocationModule,
   ],
   controllers: [AppController],
   providers: [

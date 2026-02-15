@@ -4,3 +4,16 @@ export interface SavedLocation {
   lat: number;
   long: number;
 }
+
+export interface AutoCompleteResponseFormatted {
+  name: string;
+  address: string;
+  lat: number;
+  long: number;
+}
+
+export interface RoutingRespnseFormatted {
+  distanceMeters: number;
+  timeSeconds: number;
+  shippingFee: number;
+}
