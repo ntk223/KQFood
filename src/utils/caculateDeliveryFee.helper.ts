@@ -13,3 +13,13 @@ export function calculateDeliveryFee(from : GeoPoint, to : GeoPoint): number {
 
     return 15000 + (distance - 3) * 5000; // Phí cơ bản + phí thêm cho mỗi km vượt quá 3km
 }
+
+// distance: metres
+export function calculateDeliveryFeeV2(distance: number): number {
+    const distanceKm = distance / 1000; // Chuyển đổi từ mét sang km
+    if (distanceKm <= 3) {
+        return 15000; // Phí giao hàng cho khoảng cách <= 3km
+    }
+
+    return 15000 + (distanceKm - 3) * 5000; // Phí cơ bản + phí thêm cho mỗi km vượt quá 3km
+}
